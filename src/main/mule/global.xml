@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<http:request-config name="Common_Logging_HTTP" doc:name="HTTP Request configuration" doc:id="925d5d7a-2ef4-498c-8d6d-5f2410eccdd4" responseTimeout="60000" basePath="${common.logging.api.base_path}">
+		<http:request-connection host="${common.logging.api.host}" port="${common.logging.api.port}" connectionIdleTimeout="${common.logging.api.connIdleTimeout}" protocol="${common.logging.api.protocol}"/>
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="28a09728-d9ce-4842-9d74-c06a4fd69aa6" file="config/${mule.env}.poc-weather-system-api.yaml" />
+	<http:request-config name="Weather_API" doc:name="HTTP Request configuration" doc:id="c28726e7-3090-4d3c-a035-d0ca3ce4a3e3" responseTimeout="120000" >
+		<http:request-connection protocol="HTTPS" host="${weather.host}" port="443" />
+	</http:request-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="016c22e2-be29-4dee-a08f-a1c0a94c5944" file="config/${mule.env}.poc-weather-system-api.yaml" key="${encrypt.key}" />
+<!-- 	<api-gateway:autodiscovery apiId="${api.proxy.api_id}" doc:name="API Autodiscovery" doc:id="6730504c-60dd-4677-ace1-107b742673d7" flowRef="eai-hr-workday-career-system-main"/>
+ -->
+</mule>

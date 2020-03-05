@@ -1,0 +1,65 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/5e6d44c6-64be-4471-8533-7163dd827bc1/ # 
+title: POC - Weather System API
+description: A proxy API around weather API allowing customer to rate limit, further customize authentication, and log the web service usage.
+
+traits:
+  client-id-required: !include exchange_modules/94a7d0ed-21c7-4125-89d1-8c320b9347b6/core-id-authentication/1.0.0/core-id-authentication.raml
+
+/weather:
+  get:
+    description: retrieve weather information based on the city, state
+    is: client-id-required
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/POC_Weather_System_API.json
+      400:
+        body:
+          application/json:
+            description: Bad Request
+            example:
+              {
+                  message: "Bad request"
+              }   
+      404:
+        body:
+          application/json:
+            description: Resource not found
+            example:
+              {
+                  message: "Resource not found"
+              } 
+      405:
+        body:
+          application/json:
+            description: Method not allowed
+            example:
+              {
+                  message: "Method not allowed"
+              }
+      415:
+        body:
+          application/json:
+            description: Unsupported media type
+            example:
+              {
+                  message: "Unsupported media type"
+              }
+      500:
+          body:
+            application/json:
+              description: Internal service error
+              example: {
+                message: "Internal service error"
+              }
+/test:
+  get:
+    description: retrieve weather information based on the city, state
+    is: client-id-required
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/POC_Weather_System_API.json

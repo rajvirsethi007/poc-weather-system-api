@@ -1,0 +1,48 @@
+{
+    "data": [
+        {
+            "rh": 15,
+            "pod": "d",
+            "lon": -119.17705,
+            "pres": 1015.4,
+            "timezone": "America/Los_Angeles",
+            "ob_time": "2020-02-11 19:45",
+            "country_code": "US",
+            "clouds": 0,
+            "ts": 1581450300,
+            "solar_rad": 691.7,
+            "state_code": "CA",
+            "city_name": "Oxnard",
+            "wind_spd": 1,
+            "last_ob_time": "2020-02-11T19:45:00",
+            "wind_cdir_full": "north",
+            "wind_cdir": "N",
+            "slp": 1016.9,
+            "vis": 5,
+            "h_angle": -15,
+            "sunset": "01:36",
+            "dni": 883.09,
+            "dewpt": -6.6,
+            "snow": 0,
+            "uv": 6.55805,
+            "precip": 0,
+            "wind_dir": 0,
+            "sunrise": "14:44",
+            "ghi": 691.7,
+            "dhi": 111,
+            "aqi": 54,
+            "lat": 34.1975,
+            "weather": {
+                "icon": "c01d",
+                "code": "800",
+                "description": "Clear sky"
+            },
+            "datetime": "2020-02-11:19",
+            "temp": 21,
+            "station": "KOXR",
+            "elev_angle": 41.72,
+            "app_temp": 19.6
+        }
+    ],
+    "count": 1
+}

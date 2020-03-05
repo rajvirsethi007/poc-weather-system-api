@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns="http://www.mulesoft.org/schema/mule/core" 
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+
+    <sub-flow name="global_processException_SubFlow">
+        <set-variable variableName="eventEndTime" value="#[now()]" doc:name="Set EventEndTime"/>
+		<ee:transform doc:name="Set Variables for Common Logging" doc:id="55eac3af-6284-4b6a-8f19-c7ea38809ddb" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="appName" ><![CDATA[app.name]]></ee:set-variable>
+				<ee:set-variable variableName="hostName" ><![CDATA[server.host]]></ee:set-variable>
+				<ee:set-variable variableName="commonLoggingMsg" ><![CDATA[error.description]]></ee:set-variable>
+				<ee:set-variable variableName="receivedHTTPStatus" ><![CDATA[error.muleMessage.attributes.StatusCode]]></ee:set-variable>
+				<ee:set-variable variableName="receivedHTTPReason" ><![CDATA[error.errorType]]></ee:set-variable>
+				<ee:set-variable variableName="stackTrace" ><![CDATA[%dw 2.0
+output application/java
+---
+ write(error.exception.cause, "application/java") ++ "---" ++ write(error.exception.cause.stackTrace default "", "application/json")]]></ee:set-variable>
+				<ee:set-variable variableName="receivedPayloadFromWeatherAPI" ><![CDATA[write(payload, "application/json")]]></ee:set-variable>
+			
+			</ee:variables>
+		</ee:transform>
+		<flow-ref name="sendToCommonLogging" doc:name="sendToCommonLogging"/>
+
+    </sub-flow>
+	<flow name="sendToCommonLogging">
+        <ee:transform doc:name="Create Payload for Common Logging" doc:id="f81ada77-5351-4c7e-bb4c-5e82f976b386" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	log_type_id: 1,
+	application_id: 1,
+	application_name: vars.appName,
+	log_message_id: vars.cid,
+	log_message_desc: vars.commonLoggingMsg,
+	host_name: vars.hostName,
+	flow_desc: vars.flowName,
+	incomingPayload: vars.incomingPayload default "no incoming request for Job Postings API" ,
+	stack_trace: if(vars.stackTrace !=null) vars.stackTrace else null,
+	created_time: now(),
+	event_start_time: vars.eventStartTime,
+	event_end_time: vars.eventEndTime,
+	notification_status_id: 0,
+	client_id : vars.client_id,
+	user_id: server.userName,
+	remote_addr:vars.remote_address,
+	attr1: vars.receivedPayloadFromWeatherAPI,
+	attr2: "",
+	attr3 : "",
+    attr4 : "",
+    attr5 : ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger message="Sending to Common Logging : #[payload]" level="ERROR" doc:name="LogErrPayload" category="common-logging" />
+       		<http:request method="POST" doc:name="Common Logging HTTP Request" doc:id="f36a1849-2eb3-484e-9a69-33e1dd6b128a" config-ref="Common_Logging_HTTP" path="/${common.logging.api.eventPath}" sendCorrelationId="ALWAYS" correlationId="vars.cid">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id" : p('common.logging.api.client_id'),
+	"client_secret" : p('common.logging.api.client_secret'),
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"client_id" : p('common.logging.api.client_id'),
+	"client_secret" : p('common.logging.api.client_secret')
+}]]]></http:query-params>
+			<http:response-validator>
+				<http:failure-status-code-validator values="999" />
+			</http:response-validator>
+		</http:request>
+		<logger level="INFO" doc:name="Common Logging Response Logger" doc:id="59306833-2307-477d-af6b-4654a0fc36ae" message="== common logging response == #[payload]" />
+		<logger level="INFO" doc:name="Logger Common-loggings ENDS" doc:id="d99a2f0c-f77a-4318-acd4-d881c4bedd58" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="dcb92a20-7227-4b10-944a-9a26c83b6ba4" >
+				<logger level="INFO" doc:name="Logger" doc:id="8fd3e7f1-0f6a-4fa3-8b7b-9a20f2b8b3f4" message="#[&quot;Event Logging Exception:- Can't send msg to Common Logging: &quot;+ error.errorMessage]" category="common-logging"/>
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+</mule>

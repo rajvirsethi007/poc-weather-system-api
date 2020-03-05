@@ -1,0 +1,21 @@
+#%RAML 1.0 Trait
+
+description: Each request must contain the headers necessary for client_id and client_secret enforcement policy
+headers:
+  client_id:
+    description: Client ID required for authentication
+    type: string
+    required: true
+  client_secret:
+    description: Client Secret required for authentication
+    type: string
+    required: true
+responses:
+  403:
+    body:
+      application/json:
+        example: |
+          {
+            "message": "missing_client", 
+            "details": "client_id is missing"
+          }

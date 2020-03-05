@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:workday="http://www.mulesoft.org/schema/mule/workday" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	<flow name="impl-retrieve-weather-data">
+		<set-variable value="#[flow.name]" doc:name="Set flowName" doc:id="508eba14-9942-4d29-beb9-0b852a43ee53" variableName="flowName"/>
+		<logger level="INFO" doc:name="Logger Weather API START" doc:id="fcdf57cf-98cf-4bcb-8683-3e27e9786b10" message="About to request GET Weather API for Job Posting === (No request payload required for this call)"/>
+		<http:request method="GET" doc:name="Weather API Request" doc:id="5a87bbeb-73fc-42ab-b423-b9b16d46c99d" config-ref="Weather_API" path="${weather.base_path}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"key" : p('secure::weather.auth'),
+	"city" : p('weather.city')
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger Weather API ENDS" doc:id="f391a71e-d703-4c75-beaf-e082745c72b5" message="Weather API Response payload =====  #[payload]" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="78449ac3-e041-4368-95ae-5375f215877f" type="ANY">
+                <logger level="INFO" doc:name="Logger Common-logging START" doc:id="0f1f2c10-69f5-4af0-b8fa-f88180428256" message='Error thrown by the flow :  #[vars.flowName]' category="eai-workday-career-system"/>
+				<flow-ref doc:name="global_processException_SubFlow" doc:id="c275e553-4f09-4352-ba99-3e6748e300c6" name="global_processException_SubFlow" />
+				<choice doc:name="Choice" doc:id="ea96e73c-a870-432c-a5c9-145875554fde" >
+					<when expression="#[vars.receivedHTTPStatus == 500]">
+						<logger level="INFO" doc:name="Logger 500 Error" doc:id="10e59c70-93ed-4d71-a68a-0ca4e499fb8d" message="Workday API Returned 500 error"/>
+						<ee:transform doc:name="Transform Message" doc:id="22204986-3730-49e0-a753-6ebc81a54a44" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Internal service error"
+}]]></ee:set-payload>
+							</ee:message>
+							<ee:variables >
+								<ee:set-variable variableName="httpStatus" ><![CDATA[vars.receivedHTTPStatus]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Transform Message" doc:id="695be788-7ff0-490c-b3ab-8f83a103ea34">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": vars.receivedHTTPReason.namespace ++":"++ vars.receivedHTTPReason.identifier
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[vars.receivedHTTPStatus]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+					</otherwise>
+				</choice>
+            </on-error-continue>
+        </error-handler>
+    </flow>
+</mule>

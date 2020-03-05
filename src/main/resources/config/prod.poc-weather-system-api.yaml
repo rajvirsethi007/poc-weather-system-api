@@ -1,0 +1,23 @@
+common:
+  logging:
+    api:
+      protocol: "HTTP"
+      host: "mulesoftdev.reiter.com"
+      port: "80"
+      base_path: "/api/core/v1"
+      eventPath: "event"
+      connIdleTimeout: "30000"  
+      client_id: "473be6758097450884cee046c9ef8b01"
+      client_secret: "c0A80E75c4a348AAb00E0b110dF61FE1"
+
+http:
+  port: "8081"
+api:
+  path: "/api/reiter/system/v1"
+  
+weather:
+  host: "api.weatherbit.io"
+  port: "443"
+  base_path: "/v2.0/current"
+  auth: "![ga3utjMkPoWmwP23OIiF6H6OsWnRw2kjK4FaFa35BHoNXhpmQbz/YosbfG4ktULW]"
+  city: "oxnard,CA"
